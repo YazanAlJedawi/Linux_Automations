@@ -90,7 +90,7 @@ You can override these variables in your playbook or inventory to customize the 
 Variables to consider for twicking the guidugli.auto_update role :
 
 | Variable | Description |
-| :--- | :--- | :--- |
+| :--- | :--- |
 | `au_security_only` | this option is set to 'yes' but can be toggled off as needed
 | `au_automatic_reboot` | this option is prefered were automatic rebooting and the potential crashing of services is tolerated !
 | `au_reboot_time` | in case you toggled the previous setting to 'yes' , setting a time for automatic rebooting is optimal , ex: 2:00 where there is relatively minor load !
