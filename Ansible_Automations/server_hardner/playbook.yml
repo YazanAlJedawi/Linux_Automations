@@ -1,0 +1,10 @@
+
+- name: web server configuring and hardening
+  hosts: webservers
+  become: true
+  roles: 
+    - role: server_hardner
+      firewalld_zone: public    # this defaults to public!!
+      ssh_port: 7776    # you can change it accordingly or leave it so it defualts to 22, no damage is done!!
+    - role: guidugli.auto_update
+      au_security_only: yes
