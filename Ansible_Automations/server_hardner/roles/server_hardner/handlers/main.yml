@@ -1,0 +1,9 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for server_hardner
+
+
+- name: restart sshd
+  service: 
+    name: sshd
+    state: restarted

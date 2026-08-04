@@ -1,0 +1,112 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for server_hardner
+
+
+
+- name: include OS-specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+
+
+- name: Update all system packages
+  package:
+    name: "*"
+    state: latest
+
+
+- name: install firewall and auto-update packages
+  package:
+    name:
+      - " {{ web_package }} "
+      - "{{ firewall_package }}"
+    state: present
+
+- name: apply custom SSH security settings via drop-in
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/99-custom.conf
+    content: |
+      # custom settings applied by Ansible
+      Port 7776  
+      PasswordAuthentication no
+      MaxAuthTries 3
+      PermitRootLogin no
+    owner: root
+    group: root
+    mode: '0644'
+ #   validate: /usr/sbin/sshd -t -f /etc/ssh/sshd_config
+    validate: /usr/sbin/sshd -t -f %s
+  notify: restart sshd
+  
+  
+# we need to change the selinux context of the new ssh port so it wont be blocked, this step is not necessary on Debian
+# or ubuntu systems as they use Apparmor for security and it doesn`t block processes attaching to weird ports!!
+
+- name: Allow custom ssh port in SELinux
+  community.general.seport:
+    ports: "{{ ssh_port }}"
+    proto: tcp
+    setype: ssh_port_t
+    state: present
+  when: ansible_os_family == "RedHat"  
+  
+  
+
+- name: ensure firewall is running and enabled
+  service:
+    name: "{{ firewall_service }}"
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat"
+
+  
+- name: configure UFW (Debian/Ubuntu)
+  block:
+    - name: set default UFW policies
+      ufw:
+        direction: incoming
+        policy: deny
+
+    - name: allow SSH, HTTP, HTTPS on UFW
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "{{ ssh_port }}"
+        - 80
+        - 443
+
+    - name: enable UFW
+      ufw:
+        state: enabled
+  when: ansible_os_family == "Debian"
+
+ 
+  
+- name: configure Firewalld (RHEL)
+  block:
+
+    - name: set default firewalld zone to public for security , the admin can change this accordingly!
+      ansible.builtin.command:
+        cmd: "firewall-cmd --set-default-zone={{ firewalld_zone }}"
+
+    
+    - name: allow SSH, HTTP, HTTPS on Firewalld to override the previous task
+      firewalld:
+        port: "{{ item }}/tcp"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      loop:
+        - "{{ ssh_port }}"
+        - 80
+        - 443
+
+    - name: reload firewalld to apply changes
+      service:
+        name: firewalld
+        state: restarted
+  when: ansible_os_family == "RedHat"
+
+  
+  

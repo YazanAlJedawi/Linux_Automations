@@ -1,0 +1,6 @@
+
+package_manager: apt
+web_package: apache
+firewall_package: ufw
+firewall_service: ufw
+
