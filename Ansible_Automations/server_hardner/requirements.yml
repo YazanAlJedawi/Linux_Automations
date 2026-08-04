@@ -1,0 +1,6 @@
+---
+roles:
+  - name: guidugli.auto_update
+    src: https://github.com/guidugli/ansible-role-auto_update.git
+    #version: master   # or use a specific tag like v1.0.10
+    
