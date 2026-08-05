@@ -1,0 +1,11 @@
+
+default_shell: /bin/bash
+userslist_file_path: ~/Documents/users.yml
+ssh_key_dir: ~/.ssh/key_dir
+
+manage_password_aging: true
+
+password_expire_min: 7
+password_expire_max: 90
+
+

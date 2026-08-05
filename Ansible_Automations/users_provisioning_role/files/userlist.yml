@@ -1,0 +1,24 @@
+
+users:
+  - username: sucker1
+    state: present
+    group: devops              
+    extra_groups:              
+      - docker
+      - sudo
+    shell: /bin/bash
+    ssh_key: sucker_1.pub         # must exist in {{ ssh_key_dir }}
+    sudo: true
+    password_expire_min: 1
+    password_expire_max: 90
+
+  - username: sucker2
+    state: present                      
+    extra_groups:
+      - developers
+    shell: /bin/zsh
+    ssh_key: sucker_2.pub
+    sudo: false
+
+  - username: old_comax
+    state: absent

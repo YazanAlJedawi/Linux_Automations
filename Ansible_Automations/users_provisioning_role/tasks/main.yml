@@ -1,0 +1,137 @@
+
+
+# running required checks:
+
+- name: check if file exists & fail if missing
+  ansible.builtin.stat:
+    path: "{{ userslist_file_path }}"
+  register: file_info
+  failed_when: not file_info.stat.exists
+  
+- name: ensure every user record has a username
+  ansible.builtin.assert:
+    that:
+      - item.username is defined
+      - item.username | length > 0
+    fail_msg: "every user record must include a username"
+  loop: "{{ users }}"
+
+- name: check SSH public key files exist on control node
+  ansible.builtin.stat:
+    path: "{{ ssh_key_dir }}/{{ item.ssh_key }}"
+  register: key_check
+  loop: "{{ users }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.ssh_key is defined
+    - item.ssh_key | length > 0
+  failed_when: false
+
+- name: build a dynamic list of users who are missing the key file
+  ansible.builtin.set_fact:
+    users_without_keys: "{{ key_check.results | selectattr('stat.exists', 'equalto', false) | map(attribute='item') | list }}"
+
+- name: Display the flagged users (does NOT stop the workflow)
+  ansible.builtin.debug:
+    msg: "WARNING: The following users have no SSH key file: {{ users_without_keys }}"
+
+#------------------------------------------------
+# Group management
+
+- name: Create extra groups
+  ansible.builtin.group:
+    name: "{{ item.group | default(item.username) }}"
+    state: present
+  loop: "{{ users }}"
+  when:
+    - item.group is defined
+    - item.group | length > 0
+    - item.state == 'present'
+
+
+
+- name: Create extra groups
+  ansible.builtin.group:
+    name: "{{ item.1 }}"
+    state: present
+  loop: "{{ users | subelements('extra_groups') }}"
+  when:
+    - item.0.extra_groups is defined
+    - item.0.extra_groups | length > 0
+
+# ------------------------------------------------
+# User account management
+
+- name: ensure users are present
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    state: present
+    shell: "{{ item.shell | default(default_shell) }}"
+    group: "{{ item.group | default(item.username) }}"
+    groups: >- 
+      "{{ item.extra_groups if item.extra_groups is defined and item.extra_groups 
+      |   length > 0 else omit }}"
+    append: true
+    create_home: true
+  
+    password_expire_min: >-
+      {{ item.password_expire_min if manage_password_aging else omit }}
+    password_expire_max: >-
+      {{ item.password_expire_max if manage_password_aging else omit }}
+  loop: "{{ users }}"
+  when:
+    - item.state | default('present') == 'present'
+
+
+
+# ------------------------------------------------
+# Sudo management
+
+
+- name: remove sudoers snippets for absent users or non-sudo users
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/45-{{ item.username }}"
+    state: absent
+  loop: "{{ users }}"
+  when:
+    - (item.state | default('present') == 'absent') or not (item.sudo | default(false) | bool)
+
+- name: deploy sudoers snippets for sudo users
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/45-{{ item.username }}"
+    content: >-
+      {{ item.username }} ALL=(ALL) ALL
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ users }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.sudo | default(false) | bool
+
+# ------------------------------------------------
+# SSH key management
+
+
+- name: deploy SSH authorized keys
+  ansible.posix.authorized_key:
+    user: "{{ item.username }}"
+    key: "{{ lookup('ansible.builtin.file', ssh_key_dir + '/' + item.ssh_key) }}"
+    state: present
+  loop: "{{ users }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.ssh_key is defined
+    - item.ssh_key | length > 0
+    - item.username not in users_without_keys
+
+# ------------------------------------------------
+# User removal
+
+- name: ensure users are absent
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    state: absent
+    force: true
+  loop: "{{ users }}"
+  when:
+   - item.state | default('present') == 'absent'
