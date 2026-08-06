@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for server_hardner
+
+firewalld_zone: drop
+ssh_port: 22
+
