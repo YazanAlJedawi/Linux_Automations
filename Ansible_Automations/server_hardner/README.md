@@ -102,14 +102,8 @@ Variables to consider for twicking the guidugli.auto_update role :
 
 ### [I] clone the repo
 
-- clone the repository and move the server_hardner directory under the roles/ directory in your ansible project. I uploaded a full ansible project as an example to demonstrate how the role integrates with the Structure.
+- clone the repository and move the server_hardner directory under the roles/ directory in your ansible project. There are playbook and inventroy examples under the /tests directory.
 
-- Don`t forget to place the requirements.yml file in your ansible project root directory or to 
-  include its contents in your current requirements file . after that run this following command:
-
-```bash
- $ ansible-galaxy install -r requirements.yml
-```
 
 ### [II] Include the role in your playbook
 
@@ -125,6 +119,19 @@ Create a playbook file (e.g., `site.yml`):
 	  # here you change defaults
 	- role: guidugli.auto_update
 	  # here change any defualts about automatic security updates
+```
+
+- don`t forget to define the "guidugli.auto_update" role in your requirements.yml file so you can use it in the playbook:
+
+```yaml
+roles:
+  - name: guidugli.auto_update
+    src: https://github.com/guidugli/ansible-role-auto_update.git
+```
+then run the command to install requirements:
+
+```bash
+ $ ansible-galaxy install -r requirements.yml
 ```
 
 ---
