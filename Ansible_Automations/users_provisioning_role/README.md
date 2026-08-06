@@ -1,8 +1,8 @@
-Role Name
+Role Description
 =========
 
-Bulk manage UNIX/Linux users, groups, sudo privileges, and SSH authorized keys 
-according to one source of truth.
+Automating away the management of linux users, groups, sudo privileges, and SSH authorized keys 
+according to one source of truth (a file provided in the playbook) is necessary for every effective Administrator.
 
 This role creates and removes user accounts based on a declarative YAML list. It includes safety checks to ensure SSH key files exist on the control node before deployment, flags missing keys without aborting the workflow, and automatically manages primary/private groups.
 
