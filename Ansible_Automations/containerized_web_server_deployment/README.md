@@ -1,6 +1,5 @@
 
-```markdown
-#  Secure Containerized Web Gateway (Ansible + Podman)
+#  Secure Containerized Web Gateway 
 
 An Automation project demonstrating the deployment of a secure, multi-tier microservice architecture using **Ansible** and **Podman**. 
 
@@ -62,7 +61,9 @@ This deployment follows the principle of **least privilege** and **network segme
 
 
 > **Note:** this project generates **Self-Signed SSL Certificates** dynamically on the web server for ease of deployment in a lab or development environment. browsers will display a "Not Secure" warning. This is expected for this lab.  **For Production:** You should replace the self-signed task with Let's Encrypt automation using the `community.crypto` collection or Certbot.
+
 > **Note:** The seperation of networks outlined in the docker compose file is only relevant and useful if the containers were running on the same host , adding an additional layer of security between services. but since the containers are on seperate hosts , we needed to implement iptable rules to enforce that isolation! 
+
 > **Note:** the database password should be protected inside a vault with a hidden vault password file!!
 
 
