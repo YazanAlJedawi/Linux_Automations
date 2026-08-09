@@ -1,0 +1,45 @@
+
+- name: install podman and firewall tools
+  ansible.builtin.dnf:
+    name:
+      - podman
+      - iptables-services
+    state: present
+
+- name: ensure iptables is running
+  ansible.builtin.systemd_service:
+    name: "{{item}}"
+    state: started
+    enabled: true
+  loop:
+    - iptables
+    - firewalld
+
+- name: run PostgreSQL container
+  containers.podman.podman_container:
+    name: gateway_db
+    image: docker.io/postgres:16-alpine
+    state: started
+    ports:
+      - "5432:5432"
+    env:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: "{{ db_password }}"
+      POSTGRES_DB: gateway
+
+
+
+- name: allow web server to access the database through FORWARD iptables rule !
+  ansible.builtin.shell:
+    cmd: |
+      firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -p tcp --dport 5432 -s {{ hostvars['server1.local']['ansible_host'] }} -j ACCEPT
+      firewall-cmd --direct --add-rule ipv4 filter FORWARD 1 -p tcp --dport 5432 -j DROP
+      firewall-cmd --runtime-to-permanent
+  when: hostvars['server1.local']['ansible_host'] is defined 
+
+
+- name: save iptables rules (RHEL/Fedora)
+  ansible.builtin.shell: iptables-save > /etc/sysconfig/iptables
+  changed_when: true
+
+ 

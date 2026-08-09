@@ -1,0 +1,5 @@
+2026-08-08T05:01:01.562545+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2026-08-08T05:01:01.562663+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: 
+2026-08-08T05:01:01.562711+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: database static dir "/home/mcknight/snap/code/238/.local/share/containers/storage/libpod" does not match our static dir "/home/mcknight/snap/code/254/.local/share/containers/storage/libpod": database configuration mismatch
+
+2026-08-08T05:01:01.588556+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed

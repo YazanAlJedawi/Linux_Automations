@@ -1,0 +1,71 @@
+
+
+- name: Install Podman, Compose, and Firewall
+  ansible.builtin.dnf:
+    name:
+      - podman
+      - podman-compose
+      - firewalld
+    state: present
+
+- name: ensure firewalld is running
+  ansible.builtin.systemd_service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Create project directory
+  ansible.builtin.file:
+    path: /opt/web-gateway
+    state: directory
+    mode: '0755'
+
+- name: copy Flask app files to the server
+  ansible.builtin.copy:
+    src: app/
+    dest: /opt/web-gateway/app/
+    mode: '0755'
+
+- name: copy nginx config files to the server
+  ansible.builtin.copy:
+    src: nginx/
+    dest: /opt/web-gateway/nginx/
+    mode: '0755'
+
+- name: create certs directory
+  ansible.builtin.file:
+    path: /opt/web-gateway/nginx/certs
+    state: directory
+    mode: '0755'
+
+- name: generate self-signed SSL certificate
+  ansible.builtin.command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout /opt/web-gateway/nginx/certs/server.key
+    -out /opt/web-gateway/nginx/certs/server.crt
+    -subj "/C=US/ST=Local/L=Local/O=Dev/CN=labweb.local"
+   
+
+
+- name: deploy docker-compose.yml from template
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/web-gateway/docker-compose.yml
+    mode: '0644'
+
+
+- name: allow http & https traffic
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop:
+    - http
+    - https
+
+
+- name: Launch the Containers!!!
+  ansible.builtin.command: podman-compose up -d --build
+  args:
+    chdir: /opt/web-gateway
