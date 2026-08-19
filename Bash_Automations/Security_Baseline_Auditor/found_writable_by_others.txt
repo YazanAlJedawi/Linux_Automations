@@ -1,0 +1,2 @@
+/etc/apt/sources.list.d/parrot.list
+/etc/apt/sources.list.d/parrot.list.dpkg-dist
