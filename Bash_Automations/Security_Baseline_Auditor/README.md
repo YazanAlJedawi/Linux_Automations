@@ -15,10 +15,13 @@ It produces a clear {Pass/Fail} report and **does not** change any settings auto
 | 4 | **Password expiration policy** | `PASS_MAX_DAYS` in `/etc/login.defs` is set to a value between 1 and 90 |
 | 5 | **SELinux mode** | SELinux is in Enforcing mode |
 
-> **Note**: the script is intentionally RHEL‑centric. For other distributions, adjust the firewall and SELinux checks accordingly.
+**Notes:**
 
-> **Other Note: in order for the script to probe for this metrices , it needs root privileges!
+> the script is intentionally RHEL‑centric. For other distributions, adjust the firewall and SELinux checks accordingly.
 
+> in order for the script to probe for this metrices , it needs root privileges!
+
+> in case the script found world-writable files in /etc , it would list them in a file called "etc_writable_by_others.txt" in the same directory of the script.
 ---
 
 ## Installation
